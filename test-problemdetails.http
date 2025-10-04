@@ -1,0 +1,51 @@
+### Testing ProblemDetails Implementation
+
+# Test valid request
+POST http://localhost:5024/api/currency/convert
+Content-Type: application/json
+
+{
+  "fromCurrency": "USD",
+  "toCurrency": "EUR",
+  "amount": 100
+}
+
+###
+
+# Test invalid request (missing required field)
+POST http://localhost:5024/api/currency/convert
+Content-Type: application/json
+
+{
+  "fromCurrency": "USD",
+  "amount": 100
+}
+
+###
+
+# Test invalid request (negative amount)
+POST http://localhost:5024/api/currency/convert
+Content-Type: application/json
+
+{
+  "fromCurrency": "USD",
+  "toCurrency": "EUR",
+  "amount": -100
+}
+
+###
+
+# Test unsupported currency
+POST http://localhost:5024/api/currency/convert
+Content-Type: application/json
+
+{
+  "fromCurrency": "XYZ",
+  "toCurrency": "EUR",
+  "amount": 100
+}
+
+###
+
+# Get supported currencies
+GET http://localhost:5024/api/currency/supported

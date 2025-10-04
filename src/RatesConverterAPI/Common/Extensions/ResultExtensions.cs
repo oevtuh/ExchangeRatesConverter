@@ -1,3 +1,5 @@
+using RatesConverterAPI.Models;
+
 namespace RatesConverterAPI.Common.Extensions;
 
 /// <summary>
@@ -6,19 +8,37 @@ namespace RatesConverterAPI.Common.Extensions;
 public static class ResultExtensions
 {
     /// <summary>
-    /// Converts a Result to an HTTP response
+    /// Converts a Result to an HTTP response using ProblemDetails
     /// </summary>
     /// <typeparam name="T">The type of the result value</typeparam>
     /// <param name="result">The result to convert</param>
     /// <returns>HTTP result</returns>
-    public static IResult ToHttpResult<T>(this Models.Result<T> result)
+    public static IResult ToHttpResult<T>(this Result<T> result)
     {
         return result.IsSuccess
             ? Results.Ok(result.Value)
-            : Results.BadRequest(new 
-            {
-                error = result.Error,
-                timestamp = DateTime.UtcNow
-            });
+            : Results.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Bad Request",
+                detail: result.Error,
+                type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+            );
+    }
+
+    /// <summary>
+    /// Converts a Result to an HTTP response using ProblemDetails
+    /// </summary>
+    /// <param name="result">The result to convert</param>
+    /// <returns>HTTP result</returns>
+    public static IResult ToHttpResult(this Result result)
+    {
+        return result.IsSuccess
+            ? Results.Ok()
+            : Results.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Bad Request",
+                detail: result.Error,
+                type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+            );
     }
 }

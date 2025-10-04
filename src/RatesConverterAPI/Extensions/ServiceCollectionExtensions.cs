@@ -70,8 +70,29 @@ public static class ServiceCollectionExtensions
         // Add HTTP context accessor for request metadata
         services.AddHttpContextAccessor();
 
-        // Add model validation
-        services.AddProblemDetails();
+        // Configure ProblemDetails
+        services.ConfigureProblemDetails();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Configures ProblemDetails services
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <returns>Configured service collection</returns>
+    public static IServiceCollection ConfigureProblemDetails(this IServiceCollection services)
+    {
+        services.AddProblemDetails(options =>
+        {
+            // Customize the problem details transformation
+            options.CustomizeProblemDetails = context =>
+            {
+                context.ProblemDetails.Extensions["traceId"] = 
+                    System.Diagnostics.Activity.Current?.Id ?? context.HttpContext.TraceIdentifier;
+                context.ProblemDetails.Extensions["timestamp"] = DateTime.UtcNow;
+            };
+        });
 
         return services;
     }

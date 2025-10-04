@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text.Json;
-using RatesConverterAPI.Models;
+using Microsoft.AspNetCore.Mvc;
+using RatesConverterAPI.Common.Extensions;
+using RatesConverterAPI.Common.Exceptions;
 
 namespace RatesConverterAPI.Common.Middleware;
 
@@ -30,33 +32,48 @@ public class GlobalExceptionHandlingMiddleware(
     {
         context.Response.ContentType = "application/json";
         
-        var (statusCode, message) = exception switch
+        var (statusCode, title, detail) = exception switch
         {
-            ArgumentNullException => (HttpStatusCode.BadRequest, "Required parameter is missing"),
-            ArgumentException => (HttpStatusCode.BadRequest, exception.Message),
-            InvalidOperationException => (HttpStatusCode.BadRequest, exception.Message),
-            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized access"),
-            NotImplementedException => (HttpStatusCode.NotImplemented, "Feature not implemented"),
-            TimeoutException => (HttpStatusCode.RequestTimeout, "Request timeout"),
-            _ => (HttpStatusCode.InternalServerError, "An internal server error occurred")
+            ValidationException validationEx => (HttpStatusCode.BadRequest, "Validation Failed", validationEx.Message),
+            NotFoundException notFoundEx => (HttpStatusCode.NotFound, "Resource Not Found", notFoundEx.Message),
+            BusinessRuleException businessEx => (HttpStatusCode.BadRequest, "Business Rule Violation", businessEx.Message),
+            ExternalServiceException serviceEx => (HttpStatusCode.ServiceUnavailable, "External Service Error", $"Service '{serviceEx.ServiceName}' is unavailable: {serviceEx.Message}"),
+            ArgumentNullException => (HttpStatusCode.BadRequest, "Bad Request", "Required parameter is missing"),
+            ArgumentException => (HttpStatusCode.BadRequest, "Bad Request", exception.Message),
+            InvalidOperationException => (HttpStatusCode.BadRequest, "Bad Request", exception.Message),
+            UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized", "Unauthorized access"),
+            NotImplementedException => (HttpStatusCode.NotImplemented, "Not Implemented", "Feature not implemented"),
+            TimeoutException => (HttpStatusCode.RequestTimeout, "Request Timeout", "Request timeout"),
+            _ => (HttpStatusCode.InternalServerError, "Internal Server Error", "An internal server error occurred")
         };
 
         context.Response.StatusCode = (int)statusCode;
 
-        var response = new
-        {
-            error = new
-            {
-                message = message,
-                statusCode = (int)statusCode,
-                traceId = context.TraceIdentifier,
-                timestamp = DateTime.UtcNow
-            }
-        };
+        ProblemDetails problemDetails;
 
-        var jsonResponse = JsonSerializer.Serialize(response, new JsonSerializerOptions
+        // Handle validation exceptions with detailed error information
+        if (exception is ValidationException validationException && validationException.Errors.Any())
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            var validationProblemDetails = context.CreateValidationProblemDetails(
+                errors: validationException.Errors,
+                title: title,
+                detail: detail
+            );
+            problemDetails = validationProblemDetails;
+        }
+        else
+        {
+            problemDetails = context.CreateProblemDetails(
+                statusCode: (int)statusCode,
+                title: title,
+                detail: detail
+            );
+        }
+
+        var jsonResponse = JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         });
 
         await context.Response.WriteAsync(jsonResponse);

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using RatesConverterAPI.Common.Extensions;
 using RatesConverterAPI.Models;
 
@@ -22,7 +23,9 @@ internal sealed class EndpointBuilder : IEndpointBuilder
         .WithSummary("Convert currency with validation and logging")
         .WithDescription("Converts an amount from one currency to another with database validation and request logging")
         .Produces<CurrencyConversionResponse>(StatusCodes.Status200OK)
-        .Produces(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status400BadRequest)
+        .ProducesProblem(StatusCodes.Status404NotFound)
+        .ProducesProblem(StatusCodes.Status500InternalServerError)
         .Accepts<CurrencyConversionRequest>("application/json");
 
         routeBuilder.MapGet("/api/currency/supported", () =>

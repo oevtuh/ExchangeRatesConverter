@@ -11,6 +11,16 @@ var app = builder.Build();
 
 // Configure the HTTP request pipeline
 
+// Add problem details support for development
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler();
+}
+
 // Add global exception handling middleware first
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
