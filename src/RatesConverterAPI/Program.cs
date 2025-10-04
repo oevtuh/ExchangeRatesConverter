@@ -20,7 +20,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "RatesConverter API v1");
-        options.RoutePrefix = string.Empty; // Serve Swagger UI at root
+        // options.RoutePrefix = string.Empty; // Comment this out to use default /swagger path
     });
 }
 
