@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RatesConverterAPI.Business"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RatesConverterAPI.Domain", "RatesConverterAPI.Domain\RatesConverterAPI.Domain.csproj", "{BD808E03-E3B9-4BA6-B318-5E6D1A792CA4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RatesConverterAPI.Tests", "RatesConverterAPI.Tests\RatesConverterAPI.Tests.csproj", "{6878032D-3B58-4640-8079-221348D550E5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{BD808E03-E3B9-4BA6-B318-5E6D1A792CA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD808E03-E3B9-4BA6-B318-5E6D1A792CA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD808E03-E3B9-4BA6-B318-5E6D1A792CA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6878032D-3B58-4640-8079-221348D550E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6878032D-3B58-4640-8079-221348D550E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6878032D-3B58-4640-8079-221348D550E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6878032D-3B58-4640-8079-221348D550E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
