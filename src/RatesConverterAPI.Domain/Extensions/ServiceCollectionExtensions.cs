@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RatesConverterAPI.Domain.Data;
+using RatesConverterAPI.Domain.Interfaces;
+using RatesConverterAPI.Domain.Repositories;
 
 namespace RatesConverterAPI.Domain.Extensions;
 
@@ -38,6 +40,9 @@ public static class ServiceCollectionExtensions
                 options.EnableSensitiveDataLogging();
             }
         });
+
+        // Register generic repository
+        services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
         return services;
     }

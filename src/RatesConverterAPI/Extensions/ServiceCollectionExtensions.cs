@@ -62,7 +62,14 @@ public static class ServiceCollectionExtensions
         services.AddScoped<OpenExchangeService>();
 
         // Add Business services
-        services.AddScoped<IConversionService, ConversionService>();
+        // Use factory to disambiguate constructors and prefer repository-based constructor
+        services.AddScoped<IConversionService>(sp =>
+        {
+            var pairRepo = sp.GetRequiredService<RatesConverterAPI.Domain.Interfaces.IRepository<RatesConverterAPI.Domain.Entities.CurrencyPair>>();
+            var requestRepo = sp.GetRequiredService<RatesConverterAPI.Domain.Interfaces.IRepository<RatesConverterAPI.Domain.Entities.ConversionRequest>>();
+            var openExchange = sp.GetRequiredService<IOpenExchangeService>();
+            return new ConversionService(pairRepo, requestRepo, openExchange);
+        });
 
         // Add AutoMapper
         services.AddAutoMapper(typeof(Program).Assembly);

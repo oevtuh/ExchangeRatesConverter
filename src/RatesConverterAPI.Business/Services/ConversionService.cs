@@ -1,8 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using RatesConverterAPI.Business.Interfaces;
 using RatesConverterAPI.Business.Models;
-using RatesConverterAPI.Domain.Data;
 using RatesConverterAPI.Domain.Entities;
+using RatesConverterAPI.Domain.Data;
+using RatesConverterAPI.Domain.Interfaces;
+using RatesConverterAPI.Domain.Repositories;
 using System.Diagnostics;
 
 namespace RatesConverterAPI.Business.Services;
@@ -10,10 +13,27 @@ namespace RatesConverterAPI.Business.Services;
 /// <summary>
 /// Service implementation for currency conversion operations
 /// </summary>
-public class ConversionService(
-    RatesConverterDbContext dbContext,
-    IOpenExchangeService openExchangeService) : IConversionService
+public class ConversionService : IConversionService
 {
+    private readonly IRepository<CurrencyPair> _currencyPairRepository;
+    private readonly IRepository<ConversionRequest> _conversionRequestRepository;
+    private readonly IOpenExchangeService _openExchangeService;
+
+    [ActivatorUtilitiesConstructor]
+    public ConversionService(
+        IRepository<CurrencyPair> currencyPairRepository,
+        IRepository<ConversionRequest> conversionRequestRepository,
+        IOpenExchangeService openExchangeService)
+    {
+        _currencyPairRepository = currencyPairRepository;
+        _conversionRequestRepository = conversionRequestRepository;
+        _openExchangeService = openExchangeService;
+    }
+
+    // Backward-compatible constructor: accept DbContext and adapt to repositories
+    public ConversionService(RatesConverterDbContext dbContext, IOpenExchangeService openExchangeService)
+        : this(new EfRepository<CurrencyPair>(dbContext), new EfRepository<ConversionRequest>(dbContext), openExchangeService)
+    { }
     public async Task<ConversionResult> ConvertAsync(ConversionRequestDto request, CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
@@ -39,7 +59,7 @@ public class ConversionService(
             }
 
             // 2. Get exchange rate using OpenExchange service
-            var exchangeRateResult = await openExchangeService.GetExchangeRateAsync(
+            var exchangeRateResult = await _openExchangeService.GetExchangeRateAsync(
                 request.FromCurrency, 
                 request.ToCurrency, 
                 cancellationToken);
@@ -99,7 +119,7 @@ public class ConversionService(
 
     public async Task<ConversionHistoryResult> GetHistoryAsync(ConversionHistoryQuery query, CancellationToken cancellationToken = default)
     {
-        var dbQuery = dbContext.ConversionRequests.AsQueryable();
+    var dbQuery = _conversionRequestRepository.Query(asNoTracking: true);
 
         // Apply filters
         if (!string.IsNullOrEmpty(query.FromCurrency))
@@ -139,7 +159,7 @@ public class ConversionService(
 
     public async Task<ConversionStatistics> GetStatisticsAsync(DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
-        var query = dbContext.ConversionRequests.AsQueryable();
+    var query = _conversionRequestRepository.Query(asNoTracking: true);
 
         // Apply date filters
         if (fromDate.HasValue)
@@ -185,7 +205,7 @@ public class ConversionService(
 
     public async Task<IEnumerable<CurrencyPairStatistic>> GetPopularPairsAsync(int limit = 10, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
     {
-        var query = dbContext.ConversionRequests
+        var query = _conversionRequestRepository.Query(asNoTracking: true)
             .Where(r => r.IsSuccessful);
 
         // Apply date filters
@@ -211,7 +231,7 @@ public class ConversionService(
 
     public async Task<bool> IsPairSupportedAsync(string fromCurrency, string toCurrency, CancellationToken cancellationToken = default)
     {
-        return await dbContext.CurrencyPairs
+        return await _currencyPairRepository.Query(asNoTracking: true)
             .AnyAsync(cp => cp.FromCurrency == fromCurrency.ToUpper() 
                          && cp.ToCurrency == toCurrency.ToUpper() 
                          && cp.IsEnabled, 
@@ -240,7 +260,7 @@ public class ConversionService(
             ErrorMessage = result.ErrorMessage
         };
 
-        dbContext.ConversionRequests.Add(logEntry);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await _conversionRequestRepository.AddAsync(logEntry, cancellationToken);
+        await _conversionRequestRepository.SaveChangesAsync(cancellationToken);
     }
 }
