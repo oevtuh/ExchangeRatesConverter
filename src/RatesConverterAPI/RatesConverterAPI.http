@@ -1,0 +1,40 @@
+@RatesConverterAPI_HostAddress = http://localhost:5024
+
+GET {{RatesConverterAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
+
+# Test Currency Conversion Endpoint
+POST {{RatesConverterAPI_HostAddress}}/api/currency/convert
+Content-Type: application/json
+
+{
+  "fromCurrency": "USD",
+  "toCurrency": "EUR", 
+  "amount": 100
+}
+
+###
+
+# Test with different currency pair
+POST {{RatesConverterAPI_HostAddress}}/api/currency/convert
+Content-Type: application/json
+
+{
+  "fromCurrency": "USD",
+  "toCurrency": "GBP",
+  "amount": 50
+}
+
+###
+
+# Test invalid currency pair (should fail validation)
+POST {{RatesConverterAPI_HostAddress}}/api/currency/convert
+Content-Type: application/json
+
+{
+  "fromCurrency": "USD",
+  "toCurrency": "XYZ",
+  "amount": 25
+}
