@@ -20,7 +20,7 @@ public record OpenExchangeRatesResponse
     public string? Base { get; init; }
 
     [JsonPropertyName("rates")]
-    public Dictionary<string, decimal> Rates { get; init; } = new();
+    public Dictionary<string, decimal> Rates { get; init; } = [];
 }
 
 /// <summary>

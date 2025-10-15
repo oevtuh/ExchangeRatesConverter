@@ -5,7 +5,7 @@ namespace RatesConverterAPI.Models;
 /// <summary>
 /// Request model for currency conversion
 /// </summary>
-public class CurrencyConversionRequest
+public record CurrencyConversionRequest
 {
     /// <summary>
     /// Source currency code (3 characters, e.g., "USD")

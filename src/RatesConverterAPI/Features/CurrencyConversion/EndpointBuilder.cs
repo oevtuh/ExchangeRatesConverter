@@ -30,7 +30,7 @@ internal sealed class EndpointBuilder : IEndpointBuilder
 
         routeBuilder.MapGet("/api/currency/supported", () =>
         {
-            var supportedCurrencies = new[] { "USD", "EUR", "GBP", "JPY" };
+            string[] supportedCurrencies = ["USD", "EUR", "GBP", "JPY"];
             return Results.Ok(supportedCurrencies);
         })
         .WithName("GetSupportedCurrencies")
